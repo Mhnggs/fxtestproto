@@ -109,50 +109,49 @@ def fetch_news(pair: str) -> list[dict]:
     """
     Fetch news headlines related to the selected pair.
 
-    For the prototype, this returns mock news data.
-    In production, this would hit a news API (e.g. NewsAPI, ForexFactory RSS).
+    Returns sample news data. Connect a news API for live headlines.
     """
     currencies = PAIR_CURRENCIES[pair]
     now = dt.datetime.utcnow()
 
-    # Mock news data structured for easy replacement with a real feed
-    mock_news = [
+    # Sample news data — structured for easy replacement with a real feed
+    sample_news = [
         {
             "headline": f"{currencies[0]}/{currencies[1]}: Central bank commentary drives volatility",
             "currency": currencies[0],
             "timestamp": (now - dt.timedelta(hours=2)).strftime("%Y-%m-%d %H:%M UTC"),
             "impact": "medium",
-            "source": "Reuters (mock)",
+            "source": "Reuters (sample)",
         },
         {
             "headline": f"{currencies[1]} economic data release ahead",
             "currency": currencies[1],
             "timestamp": (now - dt.timedelta(hours=1)).strftime("%Y-%m-%d %H:%M UTC"),
             "impact": "high",
-            "source": "Bloomberg (mock)",
+            "source": "Bloomberg (sample)",
         },
         {
             "headline": f"Market sentiment shifts on {currencies[0]} outlook",
             "currency": currencies[0],
             "timestamp": (now - dt.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M UTC"),
             "impact": "low",
-            "source": "FX Wire (mock)",
+            "source": "FX Wire (sample)",
         },
     ]
-    return mock_news
+    return sample_news
 
 
 def fetch_upcoming_events(pair: str) -> list[dict]:
     """
     Fetch upcoming macro events for the pair's currencies.
 
-    Prototype uses mock data. Replace with ForexFactory/Investing.com scraper
-    or an economic calendar API in production.
+    Sample data — replace with ForexFactory/Investing.com scraper
+    or an economic calendar API for live events.
     """
     currencies = PAIR_CURRENCIES[pair]
     now = dt.datetime.utcnow()
 
-    mock_events = [
+    sample_events = [
         {
             "event": f"{currencies[1]} Interest Rate Decision",
             "currency": currencies[1],
@@ -168,7 +167,7 @@ def fetch_upcoming_events(pair: str) -> list[dict]:
             "forecast": "51.2",
         },
     ]
-    return mock_events
+    return sample_events
 
 
 def has_high_impact_news_soon(pair: str, hours_threshold: float = 2.0) -> tuple[bool, str]:

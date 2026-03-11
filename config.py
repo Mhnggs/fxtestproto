@@ -1,5 +1,5 @@
 """
-Configuration constants for the Forex Trading Dashboard prototype.
+Configuration constants for the FX Trading Dashboard.
 """
 
 # Supported currency pairs and their Yahoo Finance tickers

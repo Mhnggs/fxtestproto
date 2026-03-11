@@ -1,5 +1,5 @@
 """
-Key levels computation module.
+Key levels computation with breach-aware status tracking.
 Computes day/week/month highs and lows from hourly candle data.
 """
 
@@ -98,17 +98,54 @@ def compute_key_levels(df_hourly: pd.DataFrame, session: str) -> dict:
     return levels
 
 
-def levels_to_dataframe(levels: dict, current_price: float, pair: str) -> pd.DataFrame:
-    """Convert levels dict to a display DataFrame with distance from current price."""
+def classify_level_status(
+    level_price: float, side: str, current_price: float,
+    breaches: list[dict], level_name_fragment: str,
+) -> str:
+    """
+    Determine the status of a specific level relative to current price and breaches.
+    Returns: untouched, breached, reclaimed, active resistance, active support
+    """
+    match_key = f"{level_name_fragment} {'High' if side == 'high' else 'Low'}"
+    breach = None
+    for b in breaches:
+        if b["level"] == match_key:
+            breach = b
+            break
+
+    if breach is None:
+        if side == "high":
+            return "active resistance" if current_price < level_price else "untouched"
+        else:
+            return "active support" if current_price > level_price else "untouched"
+
+    interp = breach.get("interpretation", "")
+    if interp == "Breakout":
+        return "breached"
+    elif interp in ("Reclaim", "Liquidity Sweep"):
+        return "reclaimed"
+    return "breached"
+
+
+def build_level_rows(levels: dict, current_price: float, pair: str, breaches: list[dict]) -> list[dict]:
+    """
+    Build a flat list of individual level rows (each high and low separately)
+    with price, distance, and breach status.
+    """
     pip_mult = PIP_MULTIPLIER.get(pair, 10000)
     rows = []
+
     for name, vals in levels.items():
-        rows.append({
-            "Level": name,
-            "High": vals["high"],
-            "Low": vals["low"],
-            "Range (pips)": round((vals["high"] - vals["low"]) * pip_mult, 1),
-            "Dist to High": round((vals["high"] - current_price) * pip_mult, 1),
-            "Dist to Low": round((vals["low"] - current_price) * pip_mult, 1),
-        })
-    return pd.DataFrame(rows)
+        for side in ["high", "low"]:
+            price = vals[side]
+            dist = round((price - current_price) * pip_mult, 1)
+            status = classify_level_status(price, side, current_price, breaches, name)
+            label = f"{name} {'High' if side == 'high' else 'Low'}"
+            rows.append({
+                "level": label,
+                "price": price,
+                "distance_pips": dist,
+                "status": status,
+            })
+
+    return rows

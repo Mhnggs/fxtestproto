@@ -1,8 +1,8 @@
-# FX Trading Dashboard - Prototype v2
+# FX Trading Dashboard
 
-A professional-looking Streamlit-based Forex Trading Dashboard for **decision support only**.
+A premium Streamlit-based Forex Trading Dashboard for directional bias analysis.
 
-Generates a directional bias — **LONG**, **SHORT**, or **STAY OUT** — using deterministic, rule-based logic with transparent scoring.
+Generates **LONG**, **SHORT**, or **STAY OUT** signals using deterministic, rule-based logic with transparent scoring.
 
 ## Supported Pairs
 - EUR/USD
@@ -28,18 +28,19 @@ Opens at `http://localhost:8501`.
 
 ```
 fxtestproto/
-├── app.py                # Entry point (launches ui_dashboard)
-├── ui_dashboard.py       # Streamlit UI layout and rendering
-├── config.py             # Constants, pairs, sessions, weights, thresholds
-├── data_fetcher.py       # Market data via yfinance + synthetic fallback
+├── app.py                # Entry point
+├── ui_dashboard.py       # Dashboard layout and rendering
+├── styles.py             # Premium CSS theme
+├── config.py             # Constants, pairs, sessions, weights
+├── data_fetcher.py       # Market data via yfinance + fallback
 ├── indicator_engine.py   # EMA, RSI, MACD, ATR calculations
-├── level_engine.py       # Day/week/month key levels + distance calc
+├── level_engine.py       # Key levels + breach status classification
 ├── session_engine.py     # Session-specific levels (Asia/London/NY)
-├── breach_detector.py    # Breach detection + liquidity sweep identification
+├── breach_detector.py    # Breach detection + liquidity sweep ID
 ├── signal_engine.py      # Weighted rule-based signal generation
-├── news_engine.py        # News headlines + economic calendar (mock)
-├── chart.py              # Plotly chart with overlays, levels, breach markers
-├── requirements.txt      # Python dependencies
+├── news_engine.py        # News headlines + economic calendar
+├── chart.py              # Premium Plotly chart with overlays
+├── requirements.txt      # Dependencies
 └── README.md
 ```
 
@@ -47,33 +48,19 @@ fxtestproto/
 
 | Section | Description |
 |---|---|
-| **Summary Cards** | Current price, signal (color-coded), confidence gauge, market regime |
-| **Chart** | Candlestick with EMA 20/50/200, key levels, session levels, breach markers, RSI + MACD subplots |
-| **Signal Explanation** | Human-readable reasoning for the directional bias |
-| **Score Breakdown** | Transparent per-component scoring (trend, momentum, structure, breach, news) |
-| **Indicators** | Current readings for all technical indicators |
-| **Market Conditions** | Trend, volatility, session range % of ATR, market state |
-| **News & Events** | Headlines, next macro event, risk status (Clear/Caution/Block) |
-| **Liquidity Events** | Detected sweeps of session and key levels |
-| **Key Levels** | Day/week/month highs and lows with distance from current price in pips |
-| **Session Levels** | Asia/London/NY highs and lows with range in pips |
-| **Breach Analysis** | Time, level, direction, breach type, interpretation (Sweep/Breakout/Reclaim) |
-| **Debug Mode** | Toggle to show raw indicator values, component scores, and breach details |
-
-## What Is Real vs. Mock
-
-| Component | Status |
-|---|---|
-| Market data (candles) | **Real** — Yahoo Finance via yfinance |
-| Technical indicators | **Real** — pure pandas/numpy calculations |
-| Key levels | **Real** — computed from actual candle data |
-| Session levels | **Real** — filtered by session UTC hours |
-| Breach detection | **Real** — scans candles against computed levels |
-| Liquidity sweeps | **Real** — wick-beyond-close detection logic |
-| Signal engine | **Real** — deterministic weighted scoring |
-| News headlines | **Mock** — replace with news API |
-| Economic calendar | **Mock** — replace with calendar API |
-| Fallback data | Synthetic — generated when Yahoo Finance unavailable |
+| **Alert Bar** | Top-level breach alerts with color-coded severity |
+| **Summary Cards** | Price, signal, confidence gauge, market regime |
+| **Chart** | Candlestick with EMAs, key levels, session levels, breach markers, RSI + MACD |
+| **Signal Explanation** | Component-by-component reasoning |
+| **Score Breakdown** | Visual per-component scoring with mini bars |
+| **Indicators** | Current technical indicator readings |
+| **Market Conditions** | Trend, volatility, session range % of ATR |
+| **News & Events** | Headlines, next macro event, risk status |
+| **Liquidity Events** | Detected session and key level sweeps |
+| **Key Levels** | Highs/lows with pip distance and breach status |
+| **Session Levels** | Asia/London/NY with range in pips |
+| **Breach Analysis** | Timestamped event log with interpretations |
+| **Debug Mode** | Expandable raw data for validation |
 
 ## Signal Logic
 
@@ -83,7 +70,7 @@ fxtestproto/
 4. **Breach** (15%): Wick vs close breaches, sweep detection
 5. **News** (10%): High-impact event proximity filter
 
-Score ≥ 0.3 → **LONG** | Score ≤ -0.3 → **SHORT** | Otherwise → **STAY OUT**
+Score >= 0.3 → **LONG** · Score <= -0.3 → **SHORT** · Otherwise → **STAY OUT**
 
 ## Verification Against TradingView
 
@@ -91,8 +78,8 @@ Score ≥ 0.3 → **LONG** | Score ≤ -0.3 → **SHORT** | Otherwise → **STAY
 2. Add EMA 20, 50, 200 — compare values
 3. Add RSI 14 — compare reading
 4. Compare previous day/week highs and lows
-5. Check that the signal explanation aligns with what you see on the chart
+5. Check that the signal explanation aligns with chart visuals
 
 ## Disclaimer
 
-Prototype for testing purposes only. Not financial advice.
+Not financial advice. Rule-based signals for analysis purposes only.

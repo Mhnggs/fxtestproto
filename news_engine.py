@@ -1,6 +1,6 @@
 """
 News and economic calendar engine.
-Prototype uses mock data — replace with real API for production.
+Uses sample data — connect a real news API for live headlines.
 """
 
 import datetime as dt
@@ -10,7 +10,7 @@ from config import PAIR_CURRENCIES
 def fetch_news(pair: str) -> list[dict]:
     """
     Fetch news headlines for the selected pair's currencies.
-    Mock data for prototype. Replace with NewsAPI / ForexFactory RSS in production.
+    Sample data — replace with NewsAPI / ForexFactory RSS for live feeds.
     """
     currencies = PAIR_CURRENCIES[pair]
     now = dt.datetime.utcnow()
@@ -21,21 +21,21 @@ def fetch_news(pair: str) -> list[dict]:
             "currency": currencies[0],
             "timestamp": (now - dt.timedelta(hours=2)).strftime("%Y-%m-%d %H:%M UTC"),
             "impact": "medium",
-            "source": "Reuters (mock)",
+            "source": "Reuters (sample)",
         },
         {
             "headline": f"{currencies[1]} economic data release ahead",
             "currency": currencies[1],
             "timestamp": (now - dt.timedelta(hours=1)).strftime("%Y-%m-%d %H:%M UTC"),
             "impact": "high",
-            "source": "Bloomberg (mock)",
+            "source": "Bloomberg (sample)",
         },
         {
             "headline": f"Market sentiment shifts on {currencies[0]} outlook",
             "currency": currencies[0],
             "timestamp": (now - dt.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M UTC"),
             "impact": "low",
-            "source": "FX Wire (mock)",
+            "source": "FX Wire (sample)",
         },
     ]
 
@@ -43,7 +43,7 @@ def fetch_news(pair: str) -> list[dict]:
 def fetch_upcoming_events(pair: str) -> list[dict]:
     """
     Fetch upcoming macro events for the pair's currencies.
-    Mock data for prototype. Replace with economic calendar API in production.
+    Sample data — replace with economic calendar API for live events.
     """
     currencies = PAIR_CURRENCIES[pair]
     now = dt.datetime.utcnow()
