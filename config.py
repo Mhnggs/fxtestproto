@@ -9,6 +9,13 @@ PAIRS = {
     "USDJPY": "USDJPY=X",
 }
 
+# Pip multipliers (1 pip = this many price units)
+PIP_MULTIPLIER = {
+    "EURUSD": 10000,
+    "GBPUSD": 10000,
+    "USDJPY": 100,
+}
+
 # Currency components for news filtering
 PAIR_CURRENCIES = {
     "EURUSD": ["EUR", "USD"],
@@ -18,11 +25,14 @@ PAIR_CURRENCIES = {
 
 # Trading sessions with UTC hour ranges
 SESSIONS = {
-    "Day": (0, 24),       # Full day
-    "Asia": (0, 9),       # 00:00 - 09:00 UTC
-    "London": (7, 16),    # 07:00 - 16:00 UTC
-    "New York": (12, 21), # 12:00 - 21:00 UTC
+    "Day": (0, 24),
+    "Asia": (0, 9),
+    "London": (7, 16),
+    "New York": (12, 21),
 }
+
+# All individual sessions (for computing session levels independently)
+SESSION_LIST = ["Asia", "London", "New York"]
 
 # Indicator parameters
 EMA_PERIODS = [20, 50, 200]

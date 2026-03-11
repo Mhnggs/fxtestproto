@@ -1,8 +1,8 @@
-# FX Trading Dashboard - Prototype
+# FX Trading Dashboard - Prototype v2
 
-A Streamlit-based Forex Trading Dashboard for **decision support only** (not trade execution).
+A professional-looking Streamlit-based Forex Trading Dashboard for **decision support only**.
 
-Generates a directional bias — **LONG**, **SHORT**, or **STAY OUT** — for a selected FX pair and trading session using deterministic, rule-based logic.
+Generates a directional bias — **LONG**, **SHORT**, or **STAY OUT** — using deterministic, rule-based logic with transparent scoring.
 
 ## Supported Pairs
 - EUR/USD
@@ -15,87 +15,84 @@ Generates a directional bias — **LONG**, **SHORT**, or **STAY OUT** — for a 
 - London (07:00–16:00 UTC)
 - New York (12:00–21:00 UTC)
 
-## Setup
+## Quick Start
 
-### 1. Create a virtual environment (recommended)
-```bash
-python -m venv venv
-source venv/bin/activate   # Linux/Mac
-# or: venv\Scripts\activate  # Windows
-```
-
-### 2. Install dependencies
 ```bash
 pip install -r requirements.txt
-```
-
-### 3. Run the dashboard
-```bash
 streamlit run app.py
 ```
 
-The dashboard will open in your browser at `http://localhost:8501`.
+Opens at `http://localhost:8501`.
 
 ## Project Structure
 
 ```
 fxtestproto/
-├── app.py              # Streamlit UI and layout
-├── config.py           # Constants and configuration
-├── data_fetcher.py     # Market data (yfinance) and news (mock)
-├── indicators.py       # Technical indicator calculations
-├── levels.py           # Key levels computation and breach detection
-├── signal_engine.py    # Rule-based signal generation
-├── chart.py            # Plotly chart builder
-├── requirements.txt    # Python dependencies
-└── README.md           # This file
+├── app.py                # Entry point (launches ui_dashboard)
+├── ui_dashboard.py       # Streamlit UI layout and rendering
+├── config.py             # Constants, pairs, sessions, weights, thresholds
+├── data_fetcher.py       # Market data via yfinance + synthetic fallback
+├── indicator_engine.py   # EMA, RSI, MACD, ATR calculations
+├── level_engine.py       # Day/week/month key levels + distance calc
+├── session_engine.py     # Session-specific levels (Asia/London/NY)
+├── breach_detector.py    # Breach detection + liquidity sweep identification
+├── signal_engine.py      # Weighted rule-based signal generation
+├── news_engine.py        # News headlines + economic calendar (mock)
+├── chart.py              # Plotly chart with overlays, levels, breach markers
+├── requirements.txt      # Python dependencies
+└── README.md
 ```
 
-## What Is Real vs. Placeholder
+## Dashboard Sections
+
+| Section | Description |
+|---|---|
+| **Summary Cards** | Current price, signal (color-coded), confidence gauge, market regime |
+| **Chart** | Candlestick with EMA 20/50/200, key levels, session levels, breach markers, RSI + MACD subplots |
+| **Signal Explanation** | Human-readable reasoning for the directional bias |
+| **Score Breakdown** | Transparent per-component scoring (trend, momentum, structure, breach, news) |
+| **Indicators** | Current readings for all technical indicators |
+| **Market Conditions** | Trend, volatility, session range % of ATR, market state |
+| **News & Events** | Headlines, next macro event, risk status (Clear/Caution/Block) |
+| **Liquidity Events** | Detected sweeps of session and key levels |
+| **Key Levels** | Day/week/month highs and lows with distance from current price in pips |
+| **Session Levels** | Asia/London/NY highs and lows with range in pips |
+| **Breach Analysis** | Time, level, direction, breach type, interpretation (Sweep/Breakout/Reclaim) |
+| **Debug Mode** | Toggle to show raw indicator values, component scores, and breach details |
+
+## What Is Real vs. Mock
 
 | Component | Status |
 |---|---|
-| Market data (candles) | **Real** — pulled from Yahoo Finance via yfinance |
-| Technical indicators (EMA, RSI, MACD, ATR) | **Real** — calculated from live data using the `ta` library |
-| Key levels (day/week/month highs and lows) | **Real** — derived from actual candle data |
-| Breach detection | **Real** — scans recent candles against computed levels |
-| Signal engine | **Real** — deterministic weighted scoring of all components |
-| News headlines | **Mock** — placeholder data; replace with a news API |
-| Economic calendar/events | **Mock** — placeholder data; replace with calendar API |
-| Fallback/synthetic data | Generated if Yahoo Finance is unavailable |
+| Market data (candles) | **Real** — Yahoo Finance via yfinance |
+| Technical indicators | **Real** — pure pandas/numpy calculations |
+| Key levels | **Real** — computed from actual candle data |
+| Session levels | **Real** — filtered by session UTC hours |
+| Breach detection | **Real** — scans candles against computed levels |
+| Liquidity sweeps | **Real** — wick-beyond-close detection logic |
+| Signal engine | **Real** — deterministic weighted scoring |
+| News headlines | **Mock** — replace with news API |
+| Economic calendar | **Mock** — replace with calendar API |
+| Fallback data | Synthetic — generated when Yahoo Finance unavailable |
 
-## Signal Logic (Summary)
+## Signal Logic
 
-1. **Trend**: Price vs EMA 200 (and EMA 50) on daily timeframe
-2. **Momentum**: RSI 14 zones + MACD histogram direction
-3. **Level positioning**: Price relative to prior day/week midpoints
-4. **Breach behavior**: Wick vs close breaches of key levels
-5. **News risk**: High-impact event proximity filter
+1. **Trend** (30%): Price vs EMA 200 + EMA 50 on daily timeframe
+2. **Momentum** (25%): RSI 14 zones + MACD histogram direction
+3. **Structure** (20%): Price relative to prior day/week midpoints
+4. **Breach** (15%): Wick vs close breaches, sweep detection
+5. **News** (10%): High-impact event proximity filter
 
-Components are weighted and combined into a score:
-- Score ≥ 0.3 → **LONG**
-- Score ≤ -0.3 → **SHORT**
-- Otherwise → **STAY OUT**
+Score ≥ 0.3 → **LONG** | Score ≤ -0.3 → **SHORT** | Otherwise → **STAY OUT**
 
-High-impact news approaching → forces **STAY OUT**.
+## Verification Against TradingView
 
-## Manual Validation Suggestions
-
-1. **Compare levels**: Open a chart on TradingView for the same pair and verify that the key levels (previous day high/low, etc.) match.
-2. **Check indicators**: Compare EMA, RSI, MACD values against TradingView or another platform.
-3. **Test each session**: Switch between Asia/London/New York and verify the session filter changes the data window.
-4. **Test signal logic**: Mentally trace the explanation output against the rules in `signal_engine.py`.
-5. **Test fallback mode**: Disconnect from the internet and verify the dashboard still loads with synthetic data.
-6. **Edge cases**: Check behavior on weekends when markets are closed.
-
-## Future Migration Path
-
-The code is modular and separates data, logic, and UI:
-- `data_fetcher.py` → FastAPI endpoint / service layer
-- `indicators.py`, `levels.py`, `signal_engine.py` → business logic (unchanged)
-- `app.py` → React frontend consuming the API
-- Storage → PostgreSQL for historical data and signal logs
+1. Open the same pair on TradingView (1H timeframe)
+2. Add EMA 20, 50, 200 — compare values
+3. Add RSI 14 — compare reading
+4. Compare previous day/week highs and lows
+5. Check that the signal explanation aligns with what you see on the chart
 
 ## Disclaimer
 
-This is a prototype for testing purposes only. It does not constitute financial advice and should not be used for real trading decisions.
+Prototype for testing purposes only. Not financial advice.

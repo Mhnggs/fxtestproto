@@ -1,6 +1,6 @@
 """
 Technical indicator calculations.
-Implemented directly with pandas/numpy (no external ta library needed).
+Pure pandas/numpy implementation — no external ta library needed.
 """
 
 import pandas as pd
@@ -17,57 +17,37 @@ def calculate_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     delta = series.diff()
     gain = delta.where(delta > 0, 0.0)
     loss = (-delta).where(delta < 0, 0.0)
-
     avg_gain = gain.ewm(com=period - 1, min_periods=period).mean()
     avg_loss = loss.ewm(com=period - 1, min_periods=period).mean()
-
     rs = avg_gain / avg_loss
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
+    return 100 - (100 / (1 + rs))
 
 
 def calculate_macd(series: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9) -> dict:
-    """
-    Calculate MACD components.
-
-    Returns dict with keys: macd_line, signal_line, histogram
-    """
+    """Calculate MACD line, signal line, and histogram."""
     ema_fast = series.ewm(span=fast, adjust=False).mean()
     ema_slow = series.ewm(span=slow, adjust=False).mean()
     macd_line = ema_fast - ema_slow
     signal_line = macd_line.ewm(span=signal, adjust=False).mean()
     histogram = macd_line - signal_line
-
-    return {
-        "macd_line": macd_line,
-        "signal_line": signal_line,
-        "histogram": histogram,
-    }
+    return {"macd_line": macd_line, "signal_line": signal_line, "histogram": histogram}
 
 
 def calculate_atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
     """Calculate Average True Range."""
-    high = df["High"]
-    low = df["Low"]
-    close = df["Close"]
-
-    tr1 = high - low
-    tr2 = (high - close.shift(1)).abs()
-    tr3 = (low - close.shift(1)).abs()
-
+    tr1 = df["High"] - df["Low"]
+    tr2 = (df["High"] - df["Close"].shift(1)).abs()
+    tr3 = (df["Low"] - df["Close"].shift(1)).abs()
     true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
-    atr = true_range.ewm(span=period, adjust=False).mean()
-    return atr
+    return true_range.ewm(span=period, adjust=False).mean()
 
 
 def compute_all_indicators(df: pd.DataFrame) -> dict:
     """
-    Compute all core indicators and return their latest readings.
-
-    Returns a dict of indicator name -> current value.
+    Compute all core indicators. Returns latest scalar values and full series
+    (prefixed with _) for charting.
     """
     close = df["Close"]
-
     ema20 = calculate_ema(close, 20)
     ema50 = calculate_ema(close, 50)
     ema200 = calculate_ema(close, 200)
@@ -98,15 +78,14 @@ def compute_all_indicators(df: pd.DataFrame) -> dict:
 
 
 def get_indicator_summary(indicators: dict) -> list[dict]:
-    """Format indicators into a display-friendly list."""
+    """Format indicators into a display-friendly list of dicts."""
+    price = indicators.get("current_price", 1.0)
+    dec = 2 if price > 50 else 5
+
     def fmt(val, decimals=5):
         if val is None or (isinstance(val, float) and np.isnan(val)):
             return "N/A"
         return f"{val:.{decimals}f}"
-
-    # Determine decimal places based on price magnitude
-    price = indicators.get("current_price", 1.0)
-    dec = 2 if price > 50 else 5
 
     return [
         {"Indicator": "EMA 20", "Value": fmt(indicators["ema_20"], dec)},
@@ -115,6 +94,6 @@ def get_indicator_summary(indicators: dict) -> list[dict]:
         {"Indicator": "RSI (14)", "Value": fmt(indicators["rsi"], 2)},
         {"Indicator": "MACD Line", "Value": fmt(indicators["macd_line"], dec)},
         {"Indicator": "MACD Signal", "Value": fmt(indicators["macd_signal"], dec)},
-        {"Indicator": "MACD Histogram", "Value": fmt(indicators["macd_histogram"], dec)},
+        {"Indicator": "MACD Hist", "Value": fmt(indicators["macd_histogram"], dec)},
         {"Indicator": "ATR (14)", "Value": fmt(indicators["atr"], dec)},
     ]
