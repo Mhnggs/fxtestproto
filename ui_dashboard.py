@@ -186,26 +186,35 @@ def render_explanation(result: dict):
     sc = _sig_cls(signal)
     components = result["components"]
 
-    reasons_html = ""
+    comp_labels = {
+        "trend": "Trend", "momentum": "Momentum",
+        "levels": "Structure", "breach": "Breaches", "news": "News",
+    }
+
+    lines = []
     for comp_name in ["trend", "momentum", "levels", "breach", "news"]:
         comp = components[comp_name]
-        label = comp_name.title()
-        if comp_name == "levels":
-            label = "Structure"
-        if comp_name == "breach":
-            label = "Breaches"
-        reasons_html += f"""
-        <div class="explanation-reason">
-            <span style="color:#64748b;">{label}:</span>
-            <span style="color:#cbd5e1;">{comp['label']}</span>
-            <span style="color:#475569;"> — {comp['reason']}</span>
-        </div>"""
+        label = comp_labels[comp_name]
+        lines.append(
+            f'<div style="padding:0.15rem 0 0.15rem 0.6rem; margin:0.1rem 0; '
+            f'border-left:2px solid rgba(148,163,184,0.1); font-size:0.78rem; line-height:1.5;">'
+            f'<span style="color:#64748b;">{label}:</span> '
+            f'<span style="color:#cbd5e1;">{comp["label"]}</span> '
+            f'<span style="color:#475569;">&mdash; {comp["reason"]}</span>'
+            f'</div>'
+        )
 
-    st.markdown(f"""
-    <div class="explanation-box">
-        <div class="explanation-signal {sc}">{signal}</div>
-        {reasons_html}
-    </div>""", unsafe_allow_html=True)
+    reasons_block = "\n".join(lines)
+    html = (
+        f'<div style="background:linear-gradient(135deg,#0c1222,#0f172a); '
+        f'border:1px solid rgba(56,189,248,0.1); border-left:3px solid #38bdf8; '
+        f'padding:1rem 1.2rem; border-radius:8px;">'
+        f'<div class="{sc}" style="font-weight:700; font-size:0.9rem; '
+        f'font-family:JetBrains Mono,monospace; margin-bottom:0.5rem;">{signal}</div>'
+        f'{reasons_block}'
+        f'</div>'
+    )
+    st.markdown(html, unsafe_allow_html=True)
 
 
 def render_score_breakdown(breakdown: dict):
