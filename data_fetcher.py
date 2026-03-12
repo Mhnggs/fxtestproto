@@ -7,9 +7,11 @@ import datetime as dt
 import pandas as pd
 import numpy as np
 import yfinance as yf
+import streamlit as st
 from config import PAIRS, PAIR_CURRENCIES, SESSIONS
 
 
+@st.cache_data(ttl=300, show_spinner=False)
 def fetch_candle_data(pair: str, period: str = "3mo", interval: str = "1h") -> pd.DataFrame:
     """
     Fetch OHLCV candle data from Yahoo Finance.
@@ -39,6 +41,7 @@ def fetch_candle_data(pair: str, period: str = "3mo", interval: str = "1h") -> p
         return _generate_fallback_data(pair)
 
 
+@st.cache_data(ttl=300, show_spinner=False)
 def fetch_daily_data(pair: str, period: str = "6mo") -> pd.DataFrame:
     """Fetch daily candles for higher-timeframe analysis."""
     ticker = PAIRS[pair]
@@ -60,7 +63,9 @@ def _generate_fallback_data(pair: str) -> pd.DataFrame:
     """Generate synthetic fallback data when live feed is unavailable."""
     base_prices = {"EURUSD": 1.0850, "GBPUSD": 1.2650, "USDJPY": 149.50}
     base = base_prices.get(pair, 1.0)
-    np.random.seed(42)
+    # Use pair-specific seed so each pair gets unique synthetic data
+    pair_seeds = {"EURUSD": 42, "GBPUSD": 137, "USDJPY": 256}
+    np.random.seed(pair_seeds.get(pair, hash(pair) % 10000))
 
     periods = 500
     dates = pd.date_range(end=dt.datetime.utcnow(), periods=periods, freq="1h")
@@ -80,7 +85,9 @@ def _generate_fallback_daily(pair: str) -> pd.DataFrame:
     """Generate synthetic daily fallback data."""
     base_prices = {"EURUSD": 1.0850, "GBPUSD": 1.2650, "USDJPY": 149.50}
     base = base_prices.get(pair, 1.0)
-    np.random.seed(99)
+    # Use pair-specific seed so each pair gets unique synthetic daily data
+    pair_seeds = {"EURUSD": 99, "GBPUSD": 201, "USDJPY": 314}
+    np.random.seed(pair_seeds.get(pair, hash(pair) % 10000 + 500))
 
     periods = 120
     dates = pd.date_range(end=dt.datetime.utcnow(), periods=periods, freq="1D")

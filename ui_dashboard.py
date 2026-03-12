@@ -532,7 +532,7 @@ def main():
 
     with chart_col:
         fig = build_chart(df_hourly, indicators, levels, session_levels, breaches, pair)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key=f"chart_{pair}_{session}")
 
     with side_col:
         render_explanation(result)

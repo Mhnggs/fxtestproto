@@ -46,20 +46,25 @@ THEME_CSS = """
 
     /* ── Alert bar ── */
     .alert-bar {
-        display: flex;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
         gap: 0.5rem;
         overflow-x: auto;
         padding: 0.4rem 0;
         margin-bottom: 0.8rem;
         scrollbar-width: thin;
+        width: 100%;
     }
     .alert-card {
-        flex-shrink: 0;
+        flex: 0 0 auto;
         min-width: 280px;
+        max-width: 320px;
         border-radius: 8px;
         padding: 0.65rem 0.9rem;
         font-size: 0.8rem;
         line-height: 1.4;
+        display: block;
     }
     .alert-bullish {
         background: rgba(34, 197, 94, 0.06);
