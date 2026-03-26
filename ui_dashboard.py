@@ -112,15 +112,6 @@ def render_top_bar():
     with c3:
         session = st.selectbox("Session", list(SESSIONS.keys()), key="session_select", label_visibility="collapsed")
 
-    # Detect pair/session change and clear cached data
-    prev_pair = st.session_state.get("_prev_pair")
-    prev_session = st.session_state.get("_prev_session")
-    if prev_pair is not None and (prev_pair != pair or prev_session != session):
-        fetch_candle_data.clear()
-        fetch_daily_data.clear()
-    st.session_state["_prev_pair"] = pair
-    st.session_state["_prev_session"] = session
-
     with c4:
         st.write("")
         st.button("⟳", key="refresh", use_container_width=True)
