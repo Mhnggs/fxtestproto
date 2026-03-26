@@ -7,11 +7,9 @@ import datetime as dt
 import pandas as pd
 import numpy as np
 import yfinance as yf
-import streamlit as st
 from config import PAIRS, PAIR_CURRENCIES, SESSIONS
 
 
-@st.cache_data(ttl=300, show_spinner=False)
 def fetch_candle_data(pair: str, period: str = "3mo", interval: str = "1h") -> pd.DataFrame:
     """
     Fetch OHLCV candle data from Yahoo Finance.
@@ -41,7 +39,6 @@ def fetch_candle_data(pair: str, period: str = "3mo", interval: str = "1h") -> p
         return _generate_fallback_data(pair)
 
 
-@st.cache_data(ttl=300, show_spinner=False)
 def fetch_daily_data(pair: str, period: str = "6mo") -> pd.DataFrame:
     """Fetch daily candles for higher-timeframe analysis."""
     ticker = PAIRS[pair]

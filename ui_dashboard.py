@@ -93,6 +93,28 @@ def _alert_style(interp: str, direction: str) -> str:
 
 
 # ─────────────────────────────────────────
+# Data loading with session_state caching
+# ─────────────────────────────────────────
+def _load_data(pair: str):
+    """Load hourly and daily data, caching in session_state per pair."""
+    cache_key = f"_data_{pair}"
+    cache_ts_key = f"_data_ts_{pair}"
+    now = dt.datetime.utcnow()
+
+    # Use cached data if it exists and is less than 5 minutes old
+    if cache_key in st.session_state and cache_ts_key in st.session_state:
+        age = (now - st.session_state[cache_ts_key]).total_seconds()
+        if age < 300:
+            return st.session_state[cache_key]
+
+    df_hourly = fetch_candle_data(pair)
+    df_daily = fetch_daily_data(pair)
+    st.session_state[cache_key] = (df_hourly, df_daily)
+    st.session_state[cache_ts_key] = now
+    return df_hourly, df_daily
+
+
+# ─────────────────────────────────────────
 # Render functions
 # ─────────────────────────────────────────
 def render_top_bar():
@@ -114,7 +136,11 @@ def render_top_bar():
 
     with c4:
         st.write("")
-        st.button("⟳", key="refresh", use_container_width=True)
+        if st.button("⟳", key="refresh", use_container_width=True):
+            # Clear all cached data on manual refresh
+            keys_to_clear = [k for k in st.session_state if k.startswith("_data_")]
+            for k in keys_to_clear:
+                del st.session_state[k]
 
     with c5:
         st.write("")
@@ -497,10 +523,9 @@ def render_debug(indicators: dict, result: dict, breaches: list[dict]):
 def main():
     pair, session = render_top_bar()
 
-    # Fetch data
+    # Fetch data using session_state cache
     with st.spinner("Loading market data..."):
-        df_hourly = fetch_candle_data(pair)
-        df_daily = fetch_daily_data(pair)
+        df_hourly, df_daily = _load_data(pair)
 
     if df_hourly.empty:
         st.error("Unable to load market data. Check your connection and try again.")
