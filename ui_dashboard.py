@@ -71,16 +71,25 @@ def _status_cls(status: str) -> str:
     }.get(status, "status-untouched")
 
 
-def _alert_cls(interp: str, direction: str) -> str:
+def _alert_style(interp: str, direction: str) -> str:
+    """Return inline CSS style for alert card based on interpretation."""
     if interp in ("Liquidity Sweep", "False Break"):
-        return "alert-caution"
+        return ("background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.2); "
+                "border-left:3px solid #f59e0b;")
     if direction == "Above" and interp == "Breakout":
-        return "alert-bullish"
+        return ("background:rgba(34,197,94,0.06); border:1px solid rgba(34,197,94,0.2); "
+                "border-left:3px solid #22c55e;")
     if direction == "Below" and interp == "Breakout":
-        return "alert-bearish"
+        return ("background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.2); "
+                "border-left:3px solid #ef4444;")
     if interp == "Reclaim":
-        return "alert-bullish" if direction == "Below" else "alert-bearish"
-    return "alert-caution"
+        if direction == "Below":
+            return ("background:rgba(34,197,94,0.06); border:1px solid rgba(34,197,94,0.2); "
+                    "border-left:3px solid #22c55e;")
+        return ("background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.2); "
+                "border-left:3px solid #ef4444;")
+    return ("background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.2); "
+            "border-left:3px solid #f59e0b;")
 
 
 # ─────────────────────────────────────────
@@ -98,10 +107,19 @@ def render_top_bar():
         )
 
     with c2:
-        pair = st.selectbox("Pair", list(PAIRS.keys()), label_visibility="collapsed")
+        pair = st.selectbox("Pair", list(PAIRS.keys()), key="pair_select", label_visibility="collapsed")
 
     with c3:
-        session = st.selectbox("Session", list(SESSIONS.keys()), label_visibility="collapsed")
+        session = st.selectbox("Session", list(SESSIONS.keys()), key="session_select", label_visibility="collapsed")
+
+    # Detect pair/session change and clear cached data
+    prev_pair = st.session_state.get("_prev_pair")
+    prev_session = st.session_state.get("_prev_session")
+    if prev_pair is not None and (prev_pair != pair or prev_session != session):
+        fetch_candle_data.clear()
+        fetch_daily_data.clear()
+    st.session_state["_prev_pair"] = pair
+    st.session_state["_prev_session"] = session
 
     with c4:
         st.write("")
@@ -124,16 +142,22 @@ def render_alert_bar(breaches: list[dict]):
 
     cards = ""
     for b in important:
-        cls = _alert_cls(b.get("interpretation", ""), b["direction"])
+        card_style = _alert_style(b.get("interpretation", ""), b["direction"])
         interp = b.get("interpretation", b["breach_type"])
-        cards += f"""
-        <div class="alert-card {cls}">
-            <div class="alert-level">{b['level']}</div>
-            <div class="alert-detail">{interp} — {b['breach_type']} {b['direction'].lower()}</div>
-            <div class="alert-time">{b['time']} UTC</div>
-        </div>"""
+        cards += (
+            f'<div style="flex:0 0 auto; min-width:280px; max-width:320px; border-radius:8px; '
+            f'padding:0.65rem 0.9rem; font-size:0.8rem; line-height:1.4; {card_style}">'
+            f'<div style="font-weight:600; color:#e2e8f0;">{b["level"]}</div>'
+            f'<div style="color:#94a3b8; font-size:0.75rem;">{interp} — {b["breach_type"]} {b["direction"].lower()}</div>'
+            f'<div style="font-family:JetBrains Mono,monospace; font-size:0.68rem; color:#64748b;">{b["time"]} UTC</div>'
+            f'</div>'
+        )
 
-    st.markdown(f'<div class="alert-bar">{cards}</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div style="display:flex; flex-direction:row; flex-wrap:nowrap; gap:0.5rem; '
+        f'overflow-x:auto; padding:0.4rem 0; margin-bottom:0.8rem;">{cards}</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def render_summary(price_str: str, result: dict):
